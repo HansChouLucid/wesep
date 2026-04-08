@@ -18,6 +18,10 @@ pip install -r requirements.txt
 pre-commit install  # for clean and tidy code
 ```
 
+* For newer GPUs and newer base images, Python 3.10 is recommended. The
+  `requirements.txt` file also includes compatibility markers so Python 3.12
+  can install newer `numpy/scipy/matplotlib/librosa` builds when needed.
+
 ## The Target Speaker Extraction Task
 
 > Target speaker extraction (TSE) focuses on isolating the speech of a specific target speaker from overlapped multi-talker speech, which is a typical setup in the cocktail party problem.
