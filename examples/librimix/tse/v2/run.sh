@@ -5,8 +5,9 @@
 . ./path.sh || exit 1
 
 # General configuration
-stage=-1
-stop_stage=-1
+# Default to data preparation only (Stage 1-2) for first-time users.
+stage=1
+stop_stage=2
 
 # Data preparation related
 data=data
@@ -14,7 +15,9 @@ fs=16k
 min_max=min
 noise_type="clean"
 data_type="shard" # shard/raw
-Libri2Mix_dir=/YourPATH/librimix/Libri2Mix
+# You can set this in shell with:
+#   export LIBRI2MIX_DIR=/path/to/Libri2Mix
+Libri2Mix_dir=${LIBRI2MIX_DIR:-"E:/audio enhancement/shuaiwang NJU/LibriMix/Libri2Mix"}
 mix_data_path="${Libri2Mix_dir}/wav${fs}/${min_max}"
 
 # Training related
@@ -39,6 +42,12 @@ dnsmos_use_gpu=true
 num_avg=10
 
 . tools/parse_options.sh || exit 1
+
+if [ ${stage} -le 1 ] && [ ! -d "${mix_data_path}" ]; then
+  echo "Error: mix_data_path does not exist: ${mix_data_path}"
+  echo "Please set Libri2Mix_dir in run.sh or export LIBRI2MIX_DIR."
+  exit 1
+fi
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
   echo "Prepare datasets ..."

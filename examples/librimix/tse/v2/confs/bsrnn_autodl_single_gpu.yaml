@@ -1,0 +1,90 @@
+dataloader_args:
+  batch_size: 2
+  drop_last: true
+  num_workers: 4
+  pin_memory: true
+  prefetch_factor: 4
+
+dataset_args:
+  resample_rate: &sr 16000
+  sample_num_per_epoch: 0
+  shuffle: true
+  shuffle_args:
+    shuffle_size: 2500
+  chunk_len: 48000
+  speaker_feat: &speaker_feat True
+  fbank_args:
+    num_mel_bins: 80
+    frame_shift: 10
+    frame_length: 25
+    dither: 1.0
+  noise_lmdb_file: './data/musan/lmdb'
+  noise_prob: 0
+  specaug_enroll_prob: 0
+  reverb_enroll_prob: 0
+  noise_enroll_prob: 0
+  SSA_enroll_prob: 0
+
+enable_amp: true
+exp_dir: exp/BSRNN_autodl_single_gpu
+gpus: '0'
+log_batch_interval: 100
+
+loss: SISDR
+loss_args: {}
+
+model:
+  tse_model: BSRNN
+model_args:
+  tse_model:
+    sr: *sr
+    win: 512
+    stride: 128
+    feature_dim: 128
+    num_repeat: 6
+    spk_fuse_type: 'multiply'
+    use_spk_transform: False
+    multi_fuse: False
+    joint_training: True
+    spk_model: ResNet34
+    spk_model_init: False
+    spk_args:
+      feat_dim: 80
+      embed_dim: &embed_dim 256
+      pooling_func: "TSTP"
+      two_emb_layer: False
+    spk_emb_dim: *embed_dim
+    spk_model_freeze: False
+    spk_feat: *speaker_feat
+    feat_type: "consistent"
+    multi_task: False
+    spksInTrain: 251
+
+model_init:
+  tse_model: null
+  discriminator: null
+  spk_model: null
+
+num_avg: 2
+num_epochs: 150
+
+optimizer:
+  tse_model: Adam
+optimizer_args:
+  tse_model:
+    lr: 0.001
+    weight_decay: 0.0001
+
+clip_grad: 5.0
+save_epoch_interval: 1
+
+scheduler:
+  tse_model: ExponentialDecrease
+scheduler_args:
+  tse_model:
+    final_lr: 2.5e-05
+    initial_lr: 0.001
+    warm_from_zero: false
+    warm_up_epoch: 0
+
+seed: 42
