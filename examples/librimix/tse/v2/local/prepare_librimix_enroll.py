@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     random.seed(args.seed)
 
-    if args.train:
+    if args.train or args.mix2enroll is None:
         prepare_librimix_enroll(
             args.wav_scp,
             args.spk2utts,

@@ -9,6 +9,7 @@ mix_data_path='./Libri2Mix/wav16k/min/'
 data=data
 noise_type=clean
 num_spk=2
+use_random_eval_enroll=true
 
 . tools/parse_options.sh || exit 1
 
@@ -57,25 +58,33 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
   done
 
   for dset in dev test; do
-    if [ $num_spk -eq 2 ]; then
-      url="https://raw.githubusercontent.com/BUTSpeechFIT/speakerbeam/main/egs/libri2mix/data/wav8k/min/${dset}/map_mixture2enrollment"
+    if ${use_random_eval_enroll}; then
+      python local/prepare_librimix_enroll.py \
+        "${data}"/$noise_type/${dset}/wav.scp \
+        "${data}"/$noise_type/${dset}/spk2enroll.json \
+        --num_spk ${num_spk} \
+        --train False \
+        --output_dir "${data}"/${noise_type}/${dset} \
+        --outfile_prefix "spk"
     else
-      url="https://raw.githubusercontent.com/BUTSpeechFIT/speakerbeam/main/egs/libri3mix/data/wav8k/min/${dset}/map_mixture2enrollment"
+      if [ $num_spk -eq 2 ]; then
+        url="https://raw.githubusercontent.com/BUTSpeechFIT/speakerbeam/main/egs/libri2mix/data/wav8k/min/${dset}/map_mixture2enrollment"
+      else
+        url="https://raw.githubusercontent.com/BUTSpeechFIT/speakerbeam/main/egs/libri3mix/data/wav8k/min/${dset}/map_mixture2enrollment"
+      fi
+
+      output_file="${data}/${noise_type}/${dset}/mixture2enrollment"
+      wget -O "$output_file" "$url"
+
+      python local/prepare_librimix_enroll.py \
+        "${data}"/$noise_type/${dset}/wav.scp \
+        "${data}"/$noise_type/${dset}/spk2enroll.json \
+        --mix2enroll "${data}/${noise_type}/${dset}/mixture2enrollment" \
+        --num_spk ${num_spk} \
+        --train False \
+        --output_dir "${data}"/${noise_type}/${dset} \
+        --outfile_prefix "spk"
     fi
-
-    output_file="${data}/${noise_type}/${dset}/mixture2enrollment"
-    wget -O "$output_file" "$url"
-  done
-
-  for dset in dev test; do
-    python local/prepare_librimix_enroll.py \
-      "${data}"/$noise_type/${dset}/wav.scp \
-      "${data}"/$noise_type/${dset}/spk2enroll.json \
-      --mix2enroll "${data}/${noise_type}/${dset}/mixture2enrollment" \
-      --num_spk ${num_spk} \
-      --train False \
-      --output_dir "${data}"/${noise_type}/${dset} \
-      --outfile_prefix "spk"
   done
 fi
 
